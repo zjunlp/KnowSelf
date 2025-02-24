@@ -1,0 +1,10 @@
+{
+    "agent_class": "DeepseekAgent",
+    "config": {
+        "api_key": "your-api-key",
+        "api_base": "https://api.deepseek.com",
+        "model_name": "deepseek-chat",
+        "max_tokens": 1024,
+        "temperature": 0.0
+    }
+}

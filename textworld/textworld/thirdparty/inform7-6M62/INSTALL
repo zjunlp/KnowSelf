@@ -1,0 +1,12 @@
+To install Inform 7 for Linux in /usr/local, from the directory in which 
+you found this README file, run: 
+
+./install-inform7.sh
+
+If you want to install somewhere other than under /usr/local, invoke the
+script with the --prefix option, e.g.:
+
+./install-inform7.sh --prefix /home/dlebling
+
+Enjoy!
+

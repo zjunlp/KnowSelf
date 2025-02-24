@@ -1,0 +1,1195 @@
+#!/usr/bin/perl
+use integer;
+use Cwd qw(getcwd abs_path);
+use Getopt::Std;
+use File::Basename;
+use File::Find;
+$Getopt::Std::STANDARD_HELP_VERSION=1;
+
+$idesettings{'PREFIX'}="/usr/local";
+$opt_c="";
+$opt_r="";
+$opt_s="";
+$opt_p="";
+$opt_h="";
+getopts("vhc:r:s:p:f:");
+if ($opt_p) {
+        $opt_p =~ s/^~\//$HOME\//;
+	$idesettings{'PREFIX'} = $opt_p;
+}
+
+$idesettings{'NAME'}="";
+
+$VERSION = "6M62";
+
+$NI = "$idesettings{'PREFIX'}/libexec/ni";
+$I6 = "$idesettings{'PREFIX'}/libexec/inform6";
+$BLORB = "$idesettings{'PREFIX'}/libexec/cBlorb";
+$NONINTERACTIVE = 0;
+$STORY = "";
+$OS = `uname`;
+chomp $OS;
+
+$idesettings{'EDITOR'} = '';
+$idesettings{'EDITOR'}=$ENV{'VISUAL'};
+$idesettings{'EDITOR'}=$ENV{'EDITOR'} unless ($idesettings{'EDITOR'});
+unless ($idesettings{'EDITOR'}) {
+    if ( -f "/usr/bin/editor" ) {
+	$idesettings{'EDITOR'}="/usr/bin/editor"
+	}
+}
+unless ($idesettings{'EDITOR'}) {
+    if ( -x "/bin/ed" ) {
+	$idesettings{'EDITOR'}="/bin/ed"
+	}
+}
+$idesettings{'EDITORBG'}=0;
+
+$idesettings{'BROWSER'} = '';
+$idesettings{'BROWSER'} = $ENV{'BROWSER'};
+$idesettings{'BROWSERBG'}=0;
+
+$idesettings{'PAGER'} = '';
+$idesettings{'PAGER'} = $ENV{'PAGER'};
+unless ($idesettings{'PAGER'}) {
+    $idesettings{'PAGER'} = '/bin/cat';
+    if ( -x "/bin/more") {
+	$idesettings{'PAGER'} = '/bin/more';
+    }
+    if ( -x "/usr/bin/less") {
+	$idesettings{'PAGER'} = '/usr/bin/less';
+    }
+}
+
+$idesettings{'ZTERP'}="$idesettings{'PREFIX'}/libexec/dumb-frotz";
+$idesettings{'ZTERPBG'}=0;
+$idesettings{'GTERP'}="$idesettings{'PREFIX'}/libexec/dumb-glulxe";
+$idesettings{'GTERPBG'}=0;
+
+$CLEANUP = "";
+
+$HOME = $ENV{'HOME'};
+if ($opt_h) {
+    HELP_MESSAGE();
+    exit 0;
+}
+if ($opt_v) {
+    VERSION_MESSAGE();
+    exit 0;
+}
+if (($opt_c) or ($opt_r)) {
+    $NONINTERACTIVE = ($opt_r?$opt_r:$opt_c);
+    $STORY = $NONINTERACTIVE;
+} elsif ($opt_f) {
+    $STORY = $opt_f;
+}
+
+unless ($NONINTERACTIVE) {
+    VERSION_MESSAGE();
+    print "\n\n\n\n";
+    unless (defined($HOME) && ($HOME) && ( -d "$HOME" )) {
+	print "Home directory not set or nonexistent!\n";
+	print "Attempting to use /tmp/inform/$USER.\n";
+	if ( ! -d "/tmp/inform" ) {
+	    mkdir "/tmp/inform" or die "Could not create /tmp/inform: $!\n";
+	}
+	$HOME="/tmp/inform/$USER";
+	mkdir $HOME or die "Could not create $HOME: $!\n";
+    }
+    if ((! -d "$HOME/Inform/Documentation") or (! -d "$HOME/Inform/Extensions")) {
+	print "This looks like the first time you've run Inform 7.\n";
+	print "I will now create the directories Inform, Inform/Extensions, and\n";
+	print "Inform/Documentation in your home directory ($HOME).\n\n";
+	if (! -d "$HOME/Inform") {
+	    mkdir "$HOME/Inform";
+	}
+	if (! -d "$HOME/Inform/Extensions") {
+	    mkdir "$HOME/Inform/Extensions";
+	}
+	if (! -d "$HOME/Inform/Documentation") {
+	    mkdir "$HOME/Inform/Documentation";
+	}
+        if ($OS eq "SunOS") {
+            if (! -d "$HOME/Inform/solarisfakeroot") {
+                mkdir "$HOME/Inform/solarisfakeroot";
+            }
+            if (! -d "$HOME/Inform/solarisfakeroot/var") {
+                mkdir "$HOME/Inform/solarisfakeroot/var";
+            }
+            if (! -d "$HOME/Inform/solarisfakeroot/var/sadm") {
+                mkdir "$HOME/Inform/solarisfakeroot/var/sadm";
+            }
+            if (! -d "$HOME/Inform/solarisfakeroot/var/sadm/system") {
+                mkdir "$HOME/Inform/solarisfakeroot/var/sadm/system";
+            }
+        }
+    }
+}
+
+readideprefs("$HOME/.i7rc");
+unless (($NONINTERACTIVE) or ($idesettings{'NAME'})) {
+    $idesettings{'NAME'}=printprompt("Please enter your name > ");
+    print "\n";
+}
+
+while (! -d "$idesettings{'PREFIX'}/share/inform7" ) {
+    print "\n";
+    print "I could not find the Inform 7 libraries under $idesettings{'PREFIX'}.\n";
+    if ($NONINTERACTIVE) {
+	exit 2;
+    }
+    $idesettings{'PREFIX'}=printprompt("Please enter the path where you installed the i7 package > ");
+}
+
+writeideprefs() unless ($NONINTERACTIVE);    
+
+INTRO: while(1) {
+    if ($STORY) {
+	$proj = openproj();
+	last INTRO if ($proj);
+	exit 1;
+    }
+
+    print "WELCOME TO INFORM 7\n\n\n";
+    print "(S)tart a new project.\n";
+    print "(O)pen an existing project.\n";
+    print "(Q)uit.\n";
+    $proj = getcwd();
+    $_=printprompt();
+    if (m/^S/i) {
+	$proj=newproj();
+	last INTRO if ($proj);
+	next INTRO;
+    }
+    if (m/^R/i) {
+	$proj=readproj();
+	last INTRO if ($proj);
+	next INTRO;
+    }
+    if (m/^O/i) {
+	$proj=openproj();
+	last INTRO if ($proj);
+	next INTRO;
+    }
+    if (m/^Q/i) {
+	print "Thanks for putting up with this so-called interface!\n";
+	exit 0;
+    }
+    print "I don't see any $_ here!\n";
+}
+
+print "Story is at $l\n" unless ($NONINTERACTIVE);
+writeideprefs() unless ($NONINTERACTIVE);
+$oldpwd = getcwd();
+chdir $l;
+rename_materials();
+find(\&fix_extensions, "$HOME/Inform/Extensions");
+print "\n\n";
+
+%settings = (
+    'zcode'  => "G",
+    'blorb'  => 1,
+    'zsuf'   => 'ulx',
+    'suffix' => 'gblorb',
+    'format' => 'glulx',
+	     );
+
+readsettings("$l/Settings.plist");
+setsettings($opt_s);
+
+%ni_settings = (
+    'internal' => "--internal \"$idesettings{'PREFIX'}/share/inform7/Internal\""
+		);
+
+MAINLOOP: while(1) {
+    unless ($NONINTERACTIVE) {
+	print "MAIN MENU\n\n\n";
+	if (! $idesettings{'BROWSER'}) {
+	    print "Set the environment variable BROWSER (or set your browser preferences in the\n";
+	    print " preference panel) to allow browsing the generated HTML index.\n";
+	}
+	if ($idesettings{'EDITOR'}) {
+	    print "(E)dit the story with $idesettings{'EDITOR'}.\n"
+	    } else {
+		print "Apply the editor of your choice (set in the preference panel) to\n";
+		print "$l/Source/story.ni\n";
+		print "\nAfter you have saved your work, do one of the following:\n";
+	    }  
+	print "\n";
+	print "(C)ompile the story.\n";
+	print "(G)o -- compile and run the story.\n";
+	print "(R)elease the story.\n";
+	print "Release the story for (T)esting.\n";
+	print "\n";
+	if ($idesettings{'BROWSER'}) {
+	    print "(I)ndex -- open the generated story index with $idesettings{'BROWSER'}.\n\n";
+	}
+	print "Change (S)ettings.\n";
+	print "(Q)uit.\n";
+	$_ = printprompt();
+	if ((m/^E/i) && ($idesettings{'EDITOR'})) {
+	    if ( -e "$l/Source/story.ni" ) {
+		my $cmd="\"$idesettings{'EDITOR'}\" \"$l/Source/story.ni\"";
+		if ($idesettings{'EDITORBG'}) {
+		    $cmd .= " &";
+		}
+		system($cmd);
+		print "\n\n";
+	    } else {
+		print "\n\n*** Cannot find story file! ***\n\n";
+	    }
+	    next MAINLOOP;
+	}
+	if (m/^C/i) {
+	    $bad = compile();
+	    if ($bad) {
+		print "\n\n*** COMPILATION HAD ERRORS ***\n\n";
+	    } else {
+		print "\n\nCompile Succeeded: test your game by running ";
+		if ($settings{'blorb'} == 0) {
+		    print "$l/Build/output.$settings{'zsuf'}";
+		} else {
+		    print "$l/Build/output.$settings{'suffix'}";
+		    print " (or its interior story file ";
+		    print "$l/Build/output.$settings{'zsuf'})";
+		}
+		print " with the $settings{'format'} interpreter";
+		print " of your choice\n\n";
+	    }
+	    next MAINLOOP;
+	}
+	if (m/^G/i) {
+	    $bad = compile();
+	    if ($bad) {
+		print "\n\n*** COMPILATION HAD ERRORS ***\n\n";
+	    } else {
+		print "\n\nCompile Succeeded.  Proceeding to interpreter.";
+		my $terp=($settings{'format'} eq 'glulx' ? 
+			  $idesettings{'GTERP'} : $idesettings{'ZTERP'});
+		my $terpbg=($settings{'format'} eq 'glulx' ? 
+			    $idesettings{'GTERPBG'} : $idesettings{'ZTERPBG'});
+		$terpbg=($terpbg?"&":"");
+		my $cmd="\"$terp\" \"$l/Build/output.$settings{'zsuf'}\" $terpbg";
+		if ($terpbg) {
+		    print "  Exit interpreter to return to i7.";
+		}
+		print "\n\n";
+		system($cmd);
+		print "\n\n";
+	    }
+	    next MAINLOOP;
+	}
+	if ((m/^R/i) or (m/^T/i)) {
+	    my $flags="";
+	    if (m/^R/i) {
+		$flags="--release";
+	    }
+	    $bad = compile($flags);
+	    if ($bad) {
+		print "\n\n*** COMPILATION HAD ERRORS ***\n\n";
+		next MAINLOOP;
+	    } 
+	    my $target = release();
+	    unless ($target) {
+		print "\n\n*** COULD NOT GENERATE RELEASE ***\n\n";
+	    } else {
+		print "\n\nRelease Succeeded.  Output is in:\n";
+		print "$target\n\n";
+	    }
+	    next MAINLOOP;
+	}
+	if (m/^I/i) {
+	    browse();
+	    next MAINLOOP;
+	}
+	if (m/^S/i) {
+	    settings();
+	    next MAINLOOP;
+	}
+	if (m/^Q/i) {
+	    print "\n\nThanks for putting up with this so-called interface!\n";
+	    if ($CLEANUP) {
+		unlink $CLEANUP;
+	    }
+	    chdir $oldpwd;
+	    exit 0;
+	}
+	print "I don't see any $_ here!\n";
+    } else {
+	my $rc;
+	if ($opt_c) {
+	    $rc=compile();
+	} else {
+	    $rc=compile('--release');
+	    unless ($rc) {
+		$rc=release();
+	    }
+	}
+	if ($rc) {
+	    $rc = $rc >> 8;
+	}
+	exit $rc;
+    }
+}		
+
+exit 1;
+
+# End of mainline code
+
+sub VERSION_MESSAGE {
+    print "Linux I7 shell, cheesy Perl edition, version $VERSION.\n";
+    print "  Adam Thornton (<athornton\@gmail.com>), 2007-2018\n";
+}
+
+sub HELP_MESSAGE {
+    system("pod2text $0");
+}    
+
+sub printprompt {
+    my $prompt = shift;
+    my $default = shift;
+    $prompt = "> " unless ($prompt);
+    $default = "" unless ($default);
+    my $i = '';
+    while ($i eq '') {
+	print "\n$prompt";
+	$i=<>;
+	chomp $i;
+	unless ($i) {
+	    $i = $default;
+	}
+	unless ($i) {
+	    print "I beg your pardon?\n";
+	}
+    }
+    return $i;
+}
+
+sub newproj {
+    my $m = printprompt("Location of new project [$proj] > ",$proj);
+    $m =~ s/^~\//$HOME\//;
+    if (substr($m,-7,7) ne ".inform" ) {
+	print "$m does not end in \".inform\" -- it will be appended.\n";
+	$m .= ".inform";
+    }
+    if ($^V lt 5.8) {
+	$l = $m;
+	if (substr($l,0,1) ne "/") {
+	    $l = getcwd() . "/" . $l;
+	}
+    } else {
+	$l = abs_path($m);
+    }
+
+    unless ($l) {
+	print "Uh oh!  I can't turn $m into a directory name!\n";
+	return '';
+    }
+    if ( -d $l) {
+	print "Uh oh!  $l already exists.\n";
+	print "Maybe you meant (O)pen?\n";
+	return '';
+    }
+    if (mkdir("$l")) {
+	mkdir("$l/Build");
+	mkdir("$l/Source");
+	mkdir("$l/Index");
+	if ((! -d "$l/Build") || (! -d "$l/Source") || (! -d "$l/Index")) {
+	    print "Uh oh!  Failed to create one or more directories!\n";
+	    rmdir ("$l/Build");
+	    rmdir ("$l/Source");
+	    rmdir ("$l/Index");
+	    rmdir ("$l");
+	    return '';
+	}
+	# Try a few different things to get uuid
+	$uuid = '';
+	$uuid = `uuidgen`;
+	if ($uuid eq '') {  # Debian Lenny with uuid but without uuid-runtime
+	    $uuid = `uuid`;
+	}
+	if (($uuid eq '') && ($OS eq 'SunOS')) {
+            $uuid = `makeuuid -e 69:10:50:69:10:50 -R $HOME/Inform/solarisfakeroot`;
+        }
+	if ($uuid eq '') {
+	    $pkgnam="e2fsprogs";
+	    if ( -f "/etc/debian_version" ) {
+		$dv = `cat /etc/debian_version`;
+		chomp $dv;
+		if (($dv =~ m/wheezy/) || ($dv > 6.1)) {
+		    $pkgnam="uuid-runtime";
+		}
+	    }
+	    print "Could not generate UUID--what, you don't have uuidgen?\n";
+	    print "It's probably in the package $pkgnam: install that.\n";
+	    return '';
+	}
+	chomp $uuid;
+	open(UUID,">$l/uuid.txt");
+	unless(UUID) {
+	    print "Could not open $l/uuid.txt for writing: $!\n";
+	    return '';
+	}
+	print UUID $uuid;
+	close UUID;
+	my $storyname = `basename $l .inform`;
+	chomp $storyname;
+	open STORY, ">$l/Source/story.ni";
+	unless (STORY) {
+	    print "Could not open $l/Source/story.ni for writing: $!\n";
+	    return '';
+	}
+	print STORY "\"$storyname\" by \"$idesettings{'NAME'}\".\n";
+	close STORY;
+	writesettings();
+	return $l;
+    } else {
+	print "Uh oh!  Could not create $l\n";
+	return '';
+    }
+}
+
+sub openproj {
+    if ($idesettings{'PREVIOUS'}) {
+	$proj = $idesettings{'PREVIOUS'};
+    }
+    my $m = "";
+    unless ($STORY) {
+	$m = printprompt("Location of existing project [$proj] > ",$proj);
+    } else {
+	$m = $STORY;
+    }
+    $m =~ s/^~\//$HOME\//;
+    if ($^V lt 5.8) {
+	$l = $m;
+	if (substr($l,0,1) ne "/") {
+	    $l = getcwd() . "/" . $l;
+	}
+    } else {
+	$l = abs_path($m);
+    }
+    unless ($l) {
+	print "Uh oh!  I can't turn $m into a directory name.\n";
+	return '';
+    }
+    my $bad = 0;
+    if (! -d $l) {
+	$bad = 1;
+	print "Uh oh!  $l does not exist.\n";
+	if (substr($l,-7,7) ne ".inform" ) {
+	    $l .= ".inform";
+	    print "Trying $l...\n";
+	    if (-d $l) {
+		$bad =0;
+	    } else {
+		print "$l still does not exist.\n";
+	    }
+	}
+    }
+    if ($bad) {
+	print "Maybe you meant (S)tart a new project?\n";
+	return '';
+    }
+    if (! -f "$l/uuid.txt") {
+	print "Uh oh!  Cannot find UUID.  Refusing to believe this is a project!\n";
+	return '';
+    }
+    if (! -f "$l/Source/story.ni") {
+	print "Dude, where's the story?  Not in $l/Source/story.ni!\n";
+	return '';
+    }
+    return $l;
+}
+
+sub compile {
+    my $arg = shift;
+    $arg = "" unless ($arg);
+    my $inffile = "$l/Build/auto.inf";
+    unlink($inffile);   
+    my $cmd = "\"$NI\" ";
+    if ($arg) {
+	$cmd .= "$arg ";
+    }
+    $cmd .= "$ni_settings{'internal'} --format=$settings{'zsuf'} --project \"$l\"";
+    unless ($NONINTERACTIVE) {
+	$cmd .= " 2>&1 | $idesettings{'PAGER'}";
+    }
+    print "***I7 compilation command: $cmd***\n";
+    my $rc = system($cmd);
+    return $rc if ($rc);
+    return 1 unless ((-f $inffile) && !(-z $inffile)); 
+    # The pager eats a failed return code....
+    my $arch = `arch`;
+    chomp $arch;
+    # -k does a hideous vsyscall thing on i386 which causes a crash
+    my $i6opts = "-";
+    if ($arch ne "i686") {
+	$i6opts .= "k";
+    }
+    $i6opts .= "E2w";
+    if (($arg) && ($arg eq "--release")) {
+	$i6opts .= "~S~D";
+    } else {
+	$i6opts .= "SD";
+    }
+    if ($settings{'zcode'} == 8) {
+	$i6opts .= "v8";
+    } else {
+	$i6opts .= "G";
+    }
+    $i6opts .= "x";
+    my $outfile = "$l/Build/output.$settings{'zsuf'}";
+    unlink $outfile;
+    $cmd = "\"$I6\" $i6opts \"$inffile\" -o \"$outfile\"";
+    unless ($NONINTERACTIVE) {
+	$cmd .= " 2>&1 | $idesettings{'PAGER'}";
+    }
+    print "***I6 Compilation CMD $cmd***\n";
+    $rc = system($cmd);
+    return($rc) if $rc;
+    return 1 unless ((-f $outfile) && !( -z $outfile));
+    if ($settings{'blorb'} != 0) {
+	my $blorbfile = "$l/Build/output.$settings{'suffix'}";
+	unlink($blorbfile);
+	my $cmd = "\"$BLORB\" -unix \"$l/Release.blurb\" \"$blorbfile\"";
+	unless ($NONINTERACTIVE) {
+	    $cmd .= " 2>&1 | $idesettings{'PAGER'}";
+	}
+	print "***Blorb Command: $cmd***\n";
+	my $rc = system($cmd);
+	if ($rc) {
+	    return undef;
+	}
+	unless ((-f $blorbfile) && !(-z $blorbfile)) {
+	    return undef;
+	}
+    }
+    return 0;
+}
+
+sub release {
+    open(BLURB, "<$l/Release.blurb");
+    unless (BLURB) {
+	print "Could not open Blurb file $l/Release.blurb: $!\n";
+	return undef;
+    }
+    my $mneeded = 0;
+    my $ofile = "output." . $settings{'zsuf'};
+    my $materials = "$l/Output";
+    while(<BLURB>) {
+	if (/^release to/) {
+	    $mneeded = 1;
+	    ($materials) = m/"(.*)"/;
+	}
+	if (/^storyfile leafname/) {
+	    $mneeded = 1;
+	    ($ofile) = m/"(.*)"/;
+	}
+	if ((/^web/) or (/^source public/) or (/^auxilary/) ) {
+	    $mneeded = 1;
+	    last;
+	}
+    }
+    close(BLURB);
+    if ($mneeded) {
+	my $cmd = "mkdir -p \"$materials\"";
+	my $rc = system($cmd);
+	if ($rc) {
+	    return undef;
+	}
+    } 
+    if ($settings{'blorb'} != 0) {
+	my $blorbfile = "$l/Build/output.$settings{'suffix'}";
+	unlink($blorbfile);
+	my $cmd = "\"$BLORB\" -unix \"$l/Release.blurb\" \"$blorbfile\"";
+	unless ($NONINTERACTIVE) {
+	    $cmd .= " 2>&1 | $idesettings{'PAGER'}";
+	}
+	print "***Blorb Command: $cmd***\n";
+	my $rc = system($cmd);
+	if ($rc) {
+	    return undef;
+	}
+	unless ((-f $blorbfile) && !(-z $blorbfile)) {
+	    return undef;
+	}
+	$cmd = "cp " . "\"$blorbfile\"" . " " . 
+	    "\"" . $materials . "/" . $ofile . "\"" ; 
+	$rc = system($cmd);
+	if ($rc) {
+	    return undef;
+	}
+    }
+    return "$materials" . '/' . "$ofile";
+}
+
+sub browse {
+    my $idir = "$l/Index";
+    my $ifile = $idir . "/_index.html";
+
+    unless (open IFILE, ">$ifile") {
+	print "*** Could not create Index file $ifile! ***\n\n";
+	return 3;
+    }
+    print IFILE <<EOF;
+<html>
+<head>
+<title>
+Inform Index
+</title>
+</head>
+<body>
+<p><a href="./Welcome.html">Welcome</a></p>
+<p><a href="./Actions.html">Actions</a></p>
+<p><a href="./Kinds.html">Kinds</a></p>
+<p><a href="./Phrasebook.html">Phrasebook</a></p>
+<p><a href="./Rules.html">Rules</a></p>
+<p><a href="./Scenes.html">Scenes</a></p>
+<p><a href="./World.html">World</a></p>
+<p><a href="../Build/Problems.html">Errors</a></p>
+<p><a href="$idesettings{'PREFIX'}/share/inform7/Documentation/general_index.html">Documentation</a></p>
+</body>
+</html>
+EOF
+;
+
+    close IFILE;
+    print "Using $idesettings{'BROWSER'} as your browser.";
+    if ($idesettings{'BROWSERBG'} == 0) {
+	print"  Exit the browser to return to i7.";
+    }
+    print "\n\n";
+    $cmd = $idesettings{'BROWSER'};
+    if ($cmd =~ m/%s/) {
+	$cmd =~ s/%s/$ifile/;
+    } else {
+	$cmd .= " $ifile";
+    }
+    if ($idesettings{'BROWSERBG'}) {
+	$cmd .= " &";
+    }
+    system($cmd);
+    print "\n\n";
+    if ($idesettings{'BROWSERBG'}) {
+	$CLEANUP = $ifile;
+    } else {
+	unlink $ifile;
+    }
+    return 0;
+}
+    
+sub settings {
+  SETTINGS: while(1) {
+      my %target = (
+		#    5   => "Zcode version 5 (z5)",
+		#    6   => "Zcode version 6 (z6)",
+		    8   => "Zcode version 8 (z8)",
+		    256 => "Glulx (ulx)"
+		    );
+      my %blorbtarget = (
+			 1 => "yes",
+			 0 => "no"
+			 );
+      print "SETTINGS\n\n\n";
+      print "Target: (currently ",$target{$settings{'zcode'}},")\n\n";
+      # print "Compile to Zcode version (5)\n";
+      # print "Compile to Zcode version (6)\n";
+      print "Compile to Zcode version (8)\n";
+      print "Compile to (G)lulx\n";
+      print "\n\n";
+      print "Toggle (B)lorb packaging: (currently ",$blorbtarget{$settings{'blorb'}},")\n\n";
+
+      print "(I)DE Options\n\n";
+      print "(R)eturn to main menu\n\n";
+      $_ = printprompt();
+      if (m/^R/i) {
+	  writesettings();
+	  last SETTINGS;
+      }
+      if (m/^B/i) {
+	  $settings{'blorb'} = 1 - $settings{'blorb'};
+	  next SETTINGS;
+      }
+      if (m/^8/) {
+	  $settings{'format'} = "zcode";
+	  $settings{'zcode'} = 8;
+	  $settings{'suffix'} = "zblorb";
+	  $settings{'zsuf'} = "z8";
+	  next SETTINGS;
+      }
+      if (m/^G/i) {
+	  $settings{'format'} = "glulx";
+	  $settings{'zcode'} = 256;
+	  $settings{'suffix'} = "gblorb";
+	  $settings{'zsuf'} = "ulx";
+	  next SETTINGS;
+      }
+      if (m/^I/i) {
+	  idesettings();
+	  next SETTINGS;
+      }
+  }
+    return;
+}
+
+sub readsettings {
+    my $PFILE=shift;
+    unless (open PFILE,"<$PFILE") {
+	print " *** Could not open preferences file for reading! ***\n\n";
+    }
+    my $state = 0;
+    while(<PFILE>) {
+	if (/<key>IFSettingCreateBlorb<\/key>/i) {
+	    $state = 1;
+	}
+	if (/<key>IFSettingZCodeVersion<\/key>/i) {
+	    $state = 2;
+	}
+	if ($state == 1) {
+	    if (/<true\/>/) {
+		$settings{'blorb'} = 1;
+		$state = 0;
+	    }
+	    if (/<false\/>/) {
+		$settings{'blorb'} = 0;
+		$state = 0;
+	    }
+	}
+	if ($state == 2) {
+	    (/<integer>(\d+)<\/integer>/) && do {
+		$zvernum=$1;
+		if (($zvernum == 5) or ($zvernum == 6)) {
+		    # z5/6 can't hold even a minimal game
+		    my $w="Inform 7 can no longer compile to z${1}; changing";
+		    $w.=" target to z8.";
+		    print $w unless ($NONINTERACTIVE);
+		    $zvernum=8;
+		}
+		$settings{'zcode'} = $zvernum;
+		$state = 0;
+	    }
+	}
+    }
+    
+    my $a = $settings{'zcode'};
+    zset($a);
+    return 0;
+}
+
+sub setsettings {
+    my $input = shift;
+    return unless($input);
+    my @s=split(',',$input);
+    for $a (@s) {
+	my ($k,$v) = split('=',$a);
+	$settings{$k} = $v;
+	if ($k eq "zcode") {
+	    unless (zset($v)) {
+		print "Could not set z-code value $v!\n";
+		exit 2;
+	    }
+	}
+    }
+}
+
+sub writesettings {
+    my $PFILE = "$l/Settings.plist";
+    unless ( open PFILE,">$PFILE") {
+	print " *** Could not open preferences file for writing! ***\n\n";
+	return 2;
+    }  
+    my $ofh=select PFILE;
+    my $do_blorb = ($settings{'blorb'}?"<true/>":"<false/>");
+    print <<EOF;
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.
+com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+        <key>IFCompilerOptions</key>
+        <dict>
+                <key>IFSettingNaturalInform</key>
+                <true/>
+        </dict>
+        <key>IFInform6Extensions</key>
+        <dict/>
+        <key>IFLibrarySettings</key>
+        <dict>
+                <key>IFSettingLibraryToUse</key>
+                <string>Natural</string>
+        </dict>
+        <key>IFMiscSettings</key>
+        <dict>
+                <key>IFSettingInfix</key>
+                <false/>
+        </dict>
+        <key>IFOutputSettings</key>
+        <dict>
+                <key>IFSettingCreateBlorb</key>
+		$do_blorb
+                <key>IFSettingZCodeVersion</key>
+                <integer>$settings{'zcode'}</integer>
+        </dict>
+</dict>
+</plist>
+EOF
+;
+    select $ofh;
+    close PFILE;
+    return 0;
+}
+
+sub readideprefs {
+    my $PFILE = shift;
+    unless (open PFILE,"<$PFILE") {
+	return 2;
+    }	
+    while (<PFILE>) {
+	next unless (/=/);
+	my ($key,$value) = split('=');
+	$key = trim($key);
+	$value = trim($value);
+	$idesettings{$key} = $value;
+    }
+    return 0;
+}
+
+sub writeideprefs {
+    my $PFILE = "$HOME/.i7rc";
+    unless ( open PFILE,">$PFILE") {
+	print " *** Could not open IDE preferences file for writing! ***\n\n";
+	return 2;
+    }  
+    print PFILE "\n#These are specific to the Linux stdio IDE\n\n";
+    print PFILE "NAME      = $idesettings{'NAME'}\n";
+    print PFILE "PREFIX    = $idesettings{'PREFIX'}\n";
+    print PFILE "EDITOR    = $idesettings{'EDITOR'}\n";
+    print PFILE "BROWSER   = $idesettings{'BROWSER'}\n";
+    print PFILE "PAGER     = $idesettings{'PAGER'}\n";
+    print PFILE "ZTERP     = $idesettings{'ZTERP'}\n";
+    print PFILE "GTERP     = $idesettings{'GTERP'}\n";
+    print PFILE "EDITORBG  = $idesettings{'EDITORBG'}\n";
+    print PFILE "BROWSERBG = $idesettings{'BROWSERBG'}\n";
+    print PFILE "ZTERPBG   = $idesettings{'ZTERPBG'}\n";
+    print PFILE "GTERPBG   = $idesettings{'GTERPBG'}\n";
+    print PFILE "PREVIOUS  = $l\n";
+    close PFILE;
+}
+
+sub idesettings {
+  IDESETTINGS: while(1) {
+      print "IDE SETTINGS\n\n\n";
+      print "Set (E)ditor";
+      if ($idesettings{'EDITOR'}) {
+	  print " (currently $idesettings{'EDITOR'})";
+      }
+      print "\n";
+      print "(&) Toggle running editor in background (currently ";
+      if ($idesettings{'EDITORBG'}) {
+	  print "ON";
+      } else {
+	  print "OFF";
+      }
+      print ").\n\n";
+      print "Set (B)rowser";
+      if ($idesettings{'BROWSER'}) {
+	  print " (currently $idesettings{'BROWSER'})";
+      }
+      print "\n";
+      print "Toggle running browser in bac(K)ground (currently ";
+      if ($idesettings{'BROWSERBG'}) {
+	  print "ON";
+      } else {
+	  print "OFF";
+      }
+      print ").\n\n";
+      print "Set (P)ager";
+      if ($idesettings{'PAGER'}) {
+	  print " (currently $idesettings{'PAGER'})";
+      }
+      print "\n\n";
+      print "Set (Z)-code interpreter";
+      if ($idesettings{'ZTERP'}) {
+	  print " (currently $idesettings{'ZTERP'})";
+      }
+      print "\n";
+      print "Toggle running Z-code interpreter in ba(C)kground (currently ";
+      if ($idesettings{'ZTERPBG'}) {
+	  print "ON";
+      } else {
+	  print "OFF";
+      }
+      print ").\n\n";
+      print "Set (G)lulx interpreter";
+      if ($idesettings{'GTERP'}) {
+	  print " (currently $idesettings{'GTERP'})";
+      }
+      print "\n";
+      print "Toggle running Glulx interpreter in backgroun(D) (currently ";
+      if ($idesettings{'GTERPBG'}) {
+	  print "ON";
+      } else {
+	  print "OFF";
+      }
+      print ").\n\n";
+      print "(R)eturn to settings menu\n\n";
+      $_ = printprompt();
+      if (m/^R/i) {
+	  writeideprefs();
+	  last IDESETTINGS;
+      }
+      if (m/^E/i) {
+	  $idesettings{'EDITOR'} = printprompt("Editor [$idesettings{'EDITOR'}]> ");
+	  next IDESETTINGS;
+      }
+      if (m/^B/i) {
+	  $idesettings{'BROWSER'} = printprompt("Browser [$idesettings{'BROWSER'}]> ");
+	  next IDESETTINGS;
+      }
+      if (m/^P/i) {
+	  $idesettings{'PAGER'} = printprompt("Pager [$idesettings{'PAGER'}]> ");
+	  next IDESETTINGS;
+      }
+      if (m/^Z/i) {
+	  $idesettings{'ZTERP'} = printprompt("Z-code Interpreter [$idesettings{'ZTERP'}]> ");
+	  next IDESETTINGS;
+      }
+      if (m/^G/i) {
+	  $idesettings{'GTERP'} = printprompt("Glulx Interpreter [$idesettings{'GTERP'}]> ");
+	  next IDESETTINGS;
+      }
+      if (m/^&/i) {
+	  $idesettings{'EDITORBG'} = 1 - $idesettings{'EDITORBG'};
+	  next IDESETTINGS;
+      }
+      if (m/^K/i) {
+	  $idesettings{'BROWSERBG'} = 1 - $idesettings{'BROWSERBG'};
+	  next IDESETTINGS;
+      }
+      if (m/^C/i) {
+	  $idesettings{'ZTERPBG'} = 1 - $idesettings{'ZTERPBG'};
+	  next IDESETTINGS;
+      }
+      if (m/^D/i) {
+	  $idesettings{'GTERPBG'} = 1 - $idesettings{'GTERPBG'};
+	  next IDESETTINGS;
+      }
+  }
+    
+}
+
+sub rename_materials() {
+    my $cwd=getcwd();
+    chdir("..");
+    @infsuf= (".inform");
+    my ($name, $path, $suffix) = fileparse($cwd,@infsuf);
+    my $oldmaterials=$name . " Materials";
+    my $materials=$name . ".materials";
+    if ( -d $oldmaterials ) {
+	my $w="Old-style materials folder \"$oldmaterials\" exists.\n";
+	$w .= "Renaming to \"$materials\".\n";
+	print $w unless ($NONINTERACTIVE);
+	rename $oldmaterials,$materials;
+    }
+    chdir($cwd);
+    return;
+}
+
+sub fix_extensions {
+    if ( ( -f "$_") && ! (/\.i7x\z/) ) {
+	rename $_, $_ . ".i7x";
+    }
+}
+
+sub zset() {
+    my $a = shift;
+    if (($a eq "G") or ($a eq "g")) {
+	$a = 256;
+	$settings{'zcode'} = $a;
+    }
+    return 0 unless (($a == 8) or ($a == 256));
+    if ($a == 256) {
+	$settings{'format'} = "glulx";
+	$settings{'suffix'} = "gblorb";
+	$settings{'zsuf'} = "ulx";
+    } else {
+	$settings{'format'} = "zcode";
+	$settings{'suffix'} = "zblorb";
+	$settings{'zsuf'} = "z8";
+    }
+    return $a;
+}
+
+sub trim {
+    my @out = @_;
+    for (@out) {
+	s/^\s+//;
+	s/\s+$//;
+    }
+    return wantarray ? @out : $out[0];
+}
+
+
+__END__
+
+=head1 i7
+
+i7 - Interactive shell for Inform 7 compiler
+
+i7
+
+i7 allows the creation and compilation of Interactive Fiction works
+written in the Inform 7 programming language by Graham Nelson.
+
+=over
+
+=item Interactive Invocation
+
+i7 [ -f story-dir ]
+
+Invoke "i7" with no options, and then choose whether to begin a new
+story or to work with an existing story.  You will be prompted for the
+name of the directory that is the root of your story project.  Don't
+go too crazy with the name of the directory: spaces are fine, but
+quotation marks, the pipe character, and shell metacharacters like "*"
+and "?" are not a good idea.
+
+If you supply the -f option and then the name of a directory (typically
+ending in .inform) that contains your story file, Inform will behave as if
+you selected to work with that directory as your existing story 
+location.
+
+If a new story is chosen, the appropriate directory structures and
+UUID will be created for the story file.  For an existing story, the
+directory given will be checked for the UUID file, and if it is not
+found, i7 will complain.
+
+Once a story directory has been set, i7 will move on to its main
+screen.  From here you may change story settings (unfortunately,
+settings are not yet saved, so you have to do this on each i7
+invocation), compile your story, or release it.
+
+From here, you should edit your story file
+I<project-directory>/Source/story.ni as you desire.
+
+If you have your VISUAL or EDITOR environment variables described, or
+/usr/bin/editor exists, or /bin/ed exists, or you set your preferred
+editor from the IDE preference panels, then the Inform 7 environment
+will allow you the ability to edit your story from the i7 interface.
+Otherwise, just open the story in your favorite editor.
+
+Save your story and then choose Compile.  i7 will tell you where the
+output is (I<project-directory>/Build/output.I<suffix>, where
+I<suffix> is usually "ulx", but may be "z5", "z6", "z8", or "ulx"
+depending on compilation options.
+
+If you prefer, you can Go, which compiles and then runs your story.
+The interpreter invoked has no dependencies other than stdio, which
+makes it very portable, but if you want your game to look nice, you
+can play it in any other interpreter as directed by the Compile
+option, or you can set other interpreters in the IDE preference panel.
+
+You can toggle blorb compilation for both Go and Compile if you like, and
+a blorb file will be created next to the zcode/ulx file.
+
+When you are ready to release your story, choose Release, and i7 will
+tell you where the blorb (or zcode/ulx, if you chose "Do not package
+as Blorb" as a setting) output can be found.
+
+=item Noninteractive Invocation
+
+i7 [-h] [-v] [-p prefix] [-s setting1=value1[,s2=v2...]] -c story-directory
+
+i7 [-h] [-v] [-p prefix] [-s setting1=value1[,s2=v2...]] -r story-directory
+
+If invoked with the -h option, i7 will display this help message and then
+exit.
+
+If invoked with the -v option, i7 will display the version number and then 
+exit.
+
+If invoked with the -c or -r options, i7 will compile or release your story
+noninteractively.  If you installed Inform 7 somewhere other than 
+/usr/local/share/inform7, you can specify the installation location with the
+-p option; if you want to set any compilation settings, you can do so with the
+-s option.
+
+Supported settings are "blorb" with options of "1" or "0" (that is, do or 
+do not package the output with blorb), and "zcode" with options of "8"
+(meaning compile to z8) or  256" or "g" (meaning compile to Glulx).
+
+It is hoped that noninteractive modes will be useful to authors of Inform 7
+IDEs.  A return code of 0 means that the compile or release succeeded;
+anything else signifies failure.
+
+=item What i7 is
+
+I7 is intended as an utterly barebones Inform 7 development system.
+All it really does is generate a UUID for the project and invoke the
+appropriate compilers when asked.
+
+Philip Chimento provides a GNOME port of I7, which is much to be preferred
+in the likely event that you are using an x86 or x86_64-based Linux system.
+
+This port of Inform 7 is deliberately intended to have minimal
+requirements.  A Perl interpreter is needed to run the i7 shell.  It
+is presumed that C<uuidgen> is present somewhere on the user's path;
+uuidgen is part of the e2fstools package and should be present on
+almost every Linux system.  Other than that, the actual compilers
+invoked are statically linked, and require only stdio for input and
+output, as do the bundled z-code and Glulx interpreters.
+
+=item What is implemented
+
+Compilation and Release are fully implemented.  
+
+The Index is built and is available as files in
+I<project-directory>/Index (and can be reached via the (I)ndex
+function if a browser is appropriately set, although since the inform:
+URL type is not implemented, the icons will all be missing, and since
+the source: type is not implemented either, links to portions of the
+source text also will not work).
+
+Any problems during compilation can be found in
+I<project-directory>/Build/Problems.html.
+
+Story preferences are saved, and will be respected if you move your
+game to a different platform.  IDE preferences are saved globally, but
+are not respected on other platforms (which generally use their own
+built-in editors and interpreters in any event).
+
+=item What is not implemented
+
+The Skein and the Transcript are not implemented at all.  There is no
+"Replay" function.  Although preferences are
+saved, the preference save files are not understood by other Inform 7
+ports; nor does this port understand their preferences file.
+
+Only Inform 7 story projects are implemented.  You will have to put your own
+"begins here" and "ends here" markers around extensions you write, and
+there is no support for Inform 6 story creation.
+
+=item License
+
+The i7 interface for Linux CLI is licensed under the GPLv3:
+https://www.gnu.org/licenses/gpl-3.0.html
+
+=item Problems, Suggestions, and So Forth
+
+If you have difficulty installing i7 for Linux, please feel free to
+write to Adam Thornton at C<athornton@gmail.com>.  Likewise, if i7 chokes 
+at some place other than compiling your sources, let Adam know.
+
+If you need help with the Inform 7 language, the newsgroup
+rec.arts.int-fiction is the right place to start.  
+
+If you feel that the interface for i7 is horrifically bad and ought to
+be scrapped, you're exactly right.  There's no need to tell Adam: he
+knows.  Now that you have the native command-line tools, though,
+there's no reason for you I<not> to implement an interface that's the
+functional equivalent of the Mac OS X, Windows, or GNOME versions.  Please
+feel free to do so!
+
+=back
+
+=cut

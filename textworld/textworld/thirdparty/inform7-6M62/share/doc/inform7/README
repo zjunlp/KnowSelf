@@ -1,0 +1,178 @@
+i7 allows the creation and compilation of Interactive Fiction works
+written in the Inform 7 programming language by Graham Nelson.
+
+    Installation
+        The default inform7 installation, as performed by root (see
+        the file INSTALL in this directory), will put the Inform 7
+        system under /usr/local.  However, this location can be
+        changed by specifying the --prefix option to the
+        install-inform7.sh script.  Administrative privileges are
+        required to install Inform 7 into a system directory such as
+        /usr/local.  However, it can be installed under a user's home
+        directory without privileges and will function just fine.
+
+        As with the project directory (described below), be slightly
+        cautious with installation path names.  Spaces in the name are
+        fine, but single or double quotations, the pipe character, and
+        shell metacharacters such as "?" and "*" will very likely
+        cause the i7 program to break in bizarre ways.
+
+        If inform7 is installed to somewhere in the user's $PATH
+        environment variable, then it may be invoked simply as "i7".
+
+        If it is not, specify /path/to/prefix/directory/bin/i7 to
+        invoke the Inform 7 system.
+
+        Likewise, if Inform 7 has been installed to a system
+        directory, "man i7" will produce the manual page.  If not,
+        "man -l /path/to/prefix/directory/man/man1/i7.1" will bring it
+        up.
+
+
+    Interactive Invocation
+        i7 [ -f story-dir ]
+
+        Invoke "i7" with no options, and then choose whether to begin a new
+        story or to work with an existing story. You will be prompted for
+        the name of the directory that is the root of your story project.
+        Don't go too crazy with the name of the directory: spaces are fine,
+        but quotation marks, the pipe character, and shell metacharacters
+        like "*" and "?" are not a good idea.
+
+        If you supply the -f option and then the name of a directory
+        (typically ending in .inform) that contains your story file, Inform
+        will behave as if you selected to work with that directory as your
+        existing story location.
+
+        If a new story is chosen, the appropriate directory structures and
+        UUID will be created for the story file. For an existing story, the
+        directory given will be checked for the UUID file, and if it is not
+        found, i7 will complain.
+
+        Once a story directory has been set, i7 will move on to its main
+        screen. From here you may change story settings (unfortunately,
+        settings are not yet saved, so you have to do this on each i7
+        invocation), compile your story, or release it.
+
+        From here, you should edit your story file
+        *project-directory*/Source/story.ni as you desire.
+
+        If you have your VISUAL or EDITOR environment variables described,
+        or /usr/bin/editor exists, or /bin/ed exists, or you set your
+        preferred editor from the IDE preference panels, then the Inform 7
+        environment will allow you the ability to edit your story from the
+        i7 interface. Otherwise, just open the story in your favorite
+        editor.
+
+        Save your story and then choose Compile. i7 will tell you where the
+        output is (*project-directory*/Build/output.*suffix*, where *suffix*
+        is usually "ulx", but may be "z5", "z6", "z8", or "ulx" depending on
+        compilation options.
+
+        If you prefer, you can Go, which compiles and then runs your story.
+        The interpreter invoked has no dependencies other than stdio, which
+        makes it very portable, but if you want your game to look nice, you
+        can play it in any other interpreter as directed by the Compile
+        option, or you can set other interpreters in the IDE preference
+        panel.
+
+        You can toggle blorb compilation for both Go and Compile if you
+        like, and a blorb file will be created next to the zcode/ulx file.
+
+        When you are ready to release your story, choose Release, and i7
+        will tell you where the blorb (or zcode/ulx, if you chose "Do not
+        package as Blorb" as a setting) output can be found.
+
+    Noninteractive Invocation
+        i7 [-h] [-v] [-p prefix] [-s setting1=value1[,s2=v2...]] -c
+        story-directory
+
+        i7 [-h] [-v] [-p prefix] [-s setting1=value1[,s2=v2...]] -r
+        story-directory
+
+        If invoked with the -h option, i7 will display this help message and
+        then exit.
+
+        If invoked with the -v option, i7 will display the version number
+        and then exit.
+
+        If invoked with the -c or -r options, i7 will compile or release
+        your story noninteractively. If you installed Inform 7 somewhere
+        other than /usr/local/share/inform7, you can specify the
+        installation location with the -p option; if you want to set any
+        compilation settings, you can do so with the -s option.
+
+        Supported settings are "blorb" with options of "1" or "0" (that is,
+        do or do not package the output with blorb), and "zcode" with
+        options of "8" (meaning compile to z8) or 256" or "g" (meaning
+        compile to Glulx).
+
+        It is hoped that noninteractive modes will be useful to authors of
+        Inform 7 IDEs. A return code of 0 means that the compile or release
+        succeeded; anything else signifies failure.
+
+    What i7 is
+        I7 is intended as an utterly barebones Inform 7 development system.
+        All it really does is generate a UUID for the project and invoke the
+        appropriate compilers when asked.
+
+        Philip Chimento provides a GNOME port of I7, which is much to be
+        preferred in the likely event that you are using an x86 or
+        x86_64-based Linux system.
+
+        This port of Inform 7 is deliberately intended to have minimal
+        requirements. A Perl interpreter is needed to run the i7 shell. It
+        is presumed that "uuidgen" is present somewhere on the user's path;
+        uuidgen is part of the e2fstools package and should be present on
+        almost every Linux system. Other than that, the actual compilers
+        invoked are statically linked, and require only stdio for input and
+        output, as do the bundled z-code and Glulx interpreters.
+
+    What is implemented
+        Compilation and Release are fully implemented.
+
+        The Index is built and is available as files in
+        *project-directory*/Index (and can be reached via the (I)ndex
+        function if a browser is appropriately set, although since the
+        inform: URL type is not implemented, the icons will all be missing,
+        and since the source: type is not implemented either, links to
+        portions of the source text also will not work).
+
+        Any problems during compilation can be found in
+        *project-directory*/Build/Problems.html.
+
+        Story preferences are saved, and will be respected if you move your
+        game to a different platform. IDE preferences are saved globally,
+        but are not respected on other platforms (which generally use their
+        own built-in editors and interpreters in any event).
+
+    What is not implemented
+        The Skein and the Transcript are not implemented at all. There is no
+        "Replay" function. Although preferences are saved, the preference
+        save files are not understood by other Inform 7 ports; nor does this
+        port understand their preferences file.
+
+        Only Inform 7 story projects are implemented. You will have to put
+        your own "begins here" and "ends here" markers around extensions you
+        write, and there is no support for Inform 6 story creation.
+
+    License
+        The i7 interface for Linux CLI is licensed under the GPLv3:
+        https://www.gnu.org/licenses/gpl-3.0.html
+
+    Problems, Suggestions, and So Forth
+        If you have difficulty installing i7 for Linux, please feel free to
+        write to Adam Thornton at "athornton@gmail.com". Likewise, if i7
+        chokes at some place other than compiling your sources, let Adam
+        know.
+
+        If you need help with the Inform 7 language, the newsgroup
+        rec.arts.int-fiction is the right place to start.
+
+        If you feel that the interface for i7 is horrifically bad and ought
+        to be scrapped, you're exactly right. There's no need to tell Adam:
+        he knows. Now that you have the native command-line tools, though,
+        there's no reason for you *not* to implement an interface that's the
+        functional equivalent of the Mac OS X, Windows, or GNOME versions.
+        Please feel free to do so!
+

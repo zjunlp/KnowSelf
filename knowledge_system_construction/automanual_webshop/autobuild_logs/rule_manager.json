@@ -1,0 +1,44 @@
+{
+    "all_rules": {
+        "rule_0": {
+            "rule": "When examining search results, the agent should meticulously verify whether each product can fulfill the requirements of the task and select the most suitable product based on listed details or identifiers, like size, color and price.",
+            "type": "Error"
+        },
+        "rule_1": {
+            "rule": "When the agent in a situation that it has confirmed the current product can't meet the task requirements, it needs to search for another product that meets the criteria instead of proceeding with the current product.",
+            "type": "Error"
+        },
+        "rule_2": {
+            "rule": "When on a product's detail page with multiple style or detail options, the agent must carefully select options and ensure each option meets the task requirements.",
+            "type": "Success Process"
+        },
+        "rule_3": {
+            "rule": "When the agent needs to search for products, it should use precise search terms to get relevant results, but avoid being overly specific which might limit the search results.",
+            "type": "Error"
+        },
+        "rule_4": {
+            "rule": "When the agent's first product selection attempt is unsuccessful, do not repeat the same search query. Instead, consider other products from the initial search results or modify the search query to get more relevant results.",
+            "type": "Error"
+        },
+        "rule_5": {
+            "rule": "When a task specifies detailed product features such as dietary needs, the agent should confirm that all these attributes are selected on the product page.",
+            "type": "Success Process"
+        },
+        "rule_6": {
+            "rule": "When the agent is on a product's detail page and needs to confirm specific detail such as scent or color, the agent should select these options carefully before proceeding to buy, to ensure the purchase aligns with the task's criteria.",
+            "type": "Error"
+        },
+        "rule_7": {
+            "rule": "When the agent is on a product page with multiple size options available, it should select the exact size specified in the task instructions to ensure it fulfills the size requirement.",
+            "type": "Error"
+        },
+        "rule_8": {
+            "rule": "When the agent verifies that a product meets all specified criteria on its detail page and it has confirmed the suitability of this product, the agent should proceed to click 'Buy Now' without returning to the search results.",
+            "type": "Success Process"
+        },
+        "rule_9": {
+            "rule": "When the agent is on a product page with configurable options that might fulfill task-specific requirements, it should thoroughly explore these options and click on the most suitable options.",
+            "type": "Error"
+        }
+    }
+}

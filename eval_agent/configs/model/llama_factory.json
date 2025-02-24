@@ -1,0 +1,9 @@
+{
+    "agent_class": "LlamaFactoryAgent",
+    "config": {
+        "url": "http://localhost:8001/v1/chat/completions",
+        "model_name": "llama-3.1",
+        "max_tokens": 1024,
+        "temperature": 0.5
+    }
+}

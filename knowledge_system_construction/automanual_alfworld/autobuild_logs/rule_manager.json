@@ -1,0 +1,100 @@
+{
+    "all_rules": {
+        "rule_0": {
+            "rule": "When the task requires cooling, heating, or cleaning some object and putting them on some receptacle, the agent should try to first search for the target object, take the object to the appropriate receptacle like a fridge, microwave, or sink basin to directly cool, heat, or clean it. The agent should perform the required action (cool, heat, clean) with the receptacle before going to the next location to fulfill additional task requirements. If the agent is in a situation where it needs to modify the temperature of an object using a receptacle (e.g., a fridge for cooling), it should perform the specific action like `cool` or `heat` instead of just placing the object on it.",
+            "type": "Success Process"
+        },
+        "rule_1": {
+            "rule": "When the task requires putting one or more objects on a receptacle, the agent should first search for and pick up a target object, then move to the corresponding receptacle, open it if necessary and place the object. Next, the agent should find another object and repeat this process sequentially. This approach ensures efficient placement, regardless of the number of objects involved.",
+            "type": "Success Process"
+        },
+        "rule_2": {
+            "rule": "When the agent is holding one item and needs to acquire another, it should first place the held item at its designated location before attempting to pick up the additional item. This ensures efficient task progression without holding multiple objects unnecessarily.",
+            "type": "Error"
+        },
+        "rule_3": {
+            "rule": "When the agent is in a situation that it has not found the target object in the current location, or when it needs to verify the target object's relationship to a condition (e.g., being under a desklamp), the agent should reach other possible locations to confirm and should not try other actions like opening some receptacles.",
+            "type": "Error"
+        },
+        "rule_4": {
+            "rule": "When the agent in a situation that it has located the target object, the agent should first take it and should not move to the destination directly.",
+            "type": "Error"
+        },
+        "rule_5": {
+            "rule": "When the agent in a situation that it has reached a closed receptacle and need to take or put objects, the agent should first open the receptacle and then take or put objects.",
+            "type": "Error"
+        },
+        "rule_6": {
+            "rule": "When the agent has taken the target object and needs to examine it with a desklamp, the agent should proceed to use the desklamp directly for examination. Moreover, the agent should not attempt to move the desklamp unless it is explicitly required by the task.",
+            "type": "Error"
+        },
+        "rule_7": {
+            "rule": "When the agent is holding an object and needs to interact with an appliance or receptacle, the agent must first go to the appliance's or receptacle's location before attempting the action. This ensures successful task progression by preventing actions attempted without being physically present at the site.",
+            "type": "Error"
+        },
+        "rule_8": {
+            "rule": "When the agent locates the target object that requires an action with another item, it should ensure it is in the same location as both items and should not attempt to use them if not properly positioned.",
+            "type": "Error"
+        },
+        "rule_9": {
+            "rule": "When the agent has multiple potential target objects and needs to confirm if one is related to the task's condition (e.g., being under a desklamp), the agent should go to the appropriate location to verify this relationship before interacting with any objects.",
+            "type": "Error"
+        },
+        "rule_10": {
+            "rule": "When tasks involve examining items under a desklamp, the agent should: (1) Find target object and take it. (2) Find desklamp. (3) Use the desklamp directly for the task without repositioning it, unless specified by the task.",
+            "type": "Success Process"
+        },
+        "rule_11": {
+            "rule": "When the agent encounters a situation where receptacles contain other items but only needs to place the target object, the agent should proceed to place the object without removing unrelated items.",
+            "type": "Error"
+        },
+        "rule_12": {
+            "rule": "When the agent is in a situation where it sees an object in a receptacle and needs to perform an action with it elsewhere, the agent should first take the object out of the receptacle before proceeding to another location.",
+            "type": "Error"
+        },
+        "rule_13": {
+            "rule": "When the agent in a situation where it needs to clean an object with a receptacle like sink, the agent should make sure to go to the location of the receptacle before attempting the cleaning.",
+            "type": "Error"
+        },
+        "rule_14": {
+            "rule": "When the agent is at the location of a receptacle or station needed for a task (e.g., sink for cleaning a mug), the agent should directly perform the task instead of attempting to acquire unnecessary or inaccessible items from different locations.",
+            "type": "Error"
+        },
+        "rule_15": {
+            "rule": "When the agent is holding an object that needs to be cleaned, the agent should first go to the location of the cleaning receptacle, ensure the correct positioning, then proceed with the cleaning action.",
+            "type": "Error"
+        },
+        "rule_16": {
+            "rule": "When the agent is in a situation where it needs to clean an object and is already at the location suitable for cleaning, the agent should perform the cleaning action directly and should not attempt to acquire additional items unless directly indicated as necessary.",
+            "type": "Error"
+        },
+        "rule_17": {
+            "rule": "When the agent is holding an object that needs to be placed, whether on a designated surface or within another receptacle, the agent should first move to the location of that receptacle or surface before attempting to place the object. This will ensure that the object is positioned correctly before engaging in other actions.",
+            "type": "Error"
+        },
+        "rule_18": {
+            "rule": "When the agent is in a situation where it needs to place an object on a receptacle and the receptacle has enough space, even if there is another item, the agent should place the object without seeking an alternative receptacle.",
+            "type": "Error"
+        },
+        "rule_19": {
+            "rule": "When the task requires placing items in a receptacle and other objects on it are not defined obstacles, the agent should first observe the location to assess space or arrangement before placing items directly without attempting to unnecessarily take or move those objects.",
+            "type": "Error"
+        },
+        "rule_20": {
+            "rule": "When the agent is in a situation where it needs to place an object on a receptacle, but the task does not specify needing the receptacle opened, the agent should prioritize placing the object directly on the receptacle without opening it.",
+            "type": "Error"
+        },
+        "rule_21": {
+            "rule": "When the task involves heating an object, the agent should prioritize going to appliances that are enclosed and suitable for uniform heating, such as a microwave, to ensure effective task completion.",
+            "type": "Error"
+        },
+        "rule_22": {
+            "rule": "When the agent is at a location of a receptacle that is already open and needs to perform an action with the receptacle content, the agent should not attempt to open the receptacle again; it should proceed directly with the intended action.",
+            "type": "Error"
+        },
+        "rule_23": {
+            "rule": "When the agent is holding an object that needs to be heated, it should first ensure it is at the location of the appliance or receptacle (e.g., a microwave) before attempting to initiate any heating process.",
+            "type": "Error"
+        }
+    }
+}

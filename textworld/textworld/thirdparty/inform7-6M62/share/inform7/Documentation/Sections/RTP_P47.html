@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html><head>
+<style type="text/css">
+    <!--
+	.headingbox {
+		position: relative;
+		height: 56px;
+		padding: 0px;
+		white-space:nowrap;
+		background: #f69Ca6;  /* red */
+		font-family: "Lucida Grande", "Lucida Sans Unicode", Helvetica, Arial, Verdana, sans-serif;
+		-webkit-font-smoothing: antialiased;
+	}
+	.headingtext {
+		position: absolute;
+		top: -4px;
+		left: -1px;
+		width: 100%;
+		color: #000000;
+		padding: 14px 10px 0px 10px;
+		font-size: 20px;
+		font-weight: bold;
+	}
+	.headingrubric {
+		position: absolute;
+		top: 36px;
+		width: 100%;
+		color: #000000;
+		padding: 0px 10px 0px 10px;
+		font-size: 11px;
+		font-weight: bold;
+	}
+    -->
+</style>
+<title>Run-time problem</title></head>
+<body><font face="lucida grande,geneva,arial,tahoma,verdana,helvetica,helv" size=2>
+<table cellspacing="3" border="0" width="100%">
+<tr id="surround0"><td style="width:100%">
+<div class="headingbox">
+	<div class="headingtext">Run-Time Problem</div>
+	<div class="headingrubric">Phrase applied to an incompatible kind of value (P47)</div>
+</div></td>
+</tr></table>
+
+<table border="0" cellspacing="4" cellpadding="0" width=100%><tr><td align="left" valign="top" width="110">
+<font face="lucida grande,geneva,arial,tahoma,verdana,helvetica,helv" size=2>
+<img src='inform:/outcome_images/RTE@2x.png' border=1 width=100 height=100>&nbsp;&nbsp;&nbsp;&nbsp;</font></td><td align="left" valign="top">
+<font face="lucida grande,geneva,arial,tahoma,verdana,helvetica,helv" size=2><p style="margin-top:0;">
+<p><i>Most problems are detected when Inform translates the source text, but this is one of the exceptions, a "run-time problem" which emerges only during play.</i></p>
+<hr>
+<p>When Inform is given one or more definitions for a phrase, and it is not clear in advance that these definitions apply to a particular situation, it has to check this during play. If it turns out that none of the available definitions can apply, this run-time problem is generated.<p>For instance, suppose the source defines: <font color="#000080"><b>To greet (M - a man): ...</b></font> and also <font color="#000080"><b>To greet (W - a woman): ...</b></font>, and also says: <font color="#000080"><b>Before kissing someone (called the partner), greet the partner.</b></font> And suppose the player then does something which the author didn't expect, by typing KISS FELIX, where Felix is a cat (an object of kind <font color="#000080"><b>person</b></font>, but neither a <font color="#000080"><b>man</b></font> nor a <font color="#000080"><b>woman</b></font>). Inform is then unable to apply <font color="#000080"><b>greet</b></font> correctly because neither definition can be applied to Felix's kind.</p>
+</font></td></tr></table>
+</body>
+</html>

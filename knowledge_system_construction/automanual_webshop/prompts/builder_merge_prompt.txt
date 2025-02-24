@@ -1,0 +1,49 @@
+[system]
+You are observing a web page agent as it codes and acts within a Web environment. Your goal is to construct a manual of rules to assist the agent in completing tasks. Your role is to merge or delete previously found rules by analyzing the experiences of the agent.
+
+[user]
+You will be presented with the current found rules. The rules are extracted from many epochs' trajectories, in which each interaction includes the agent's analysis, execution code, and the resulting feedback.
+
+A rule is represented with 'rule_id' and has the following attributes:
+   - rule: the description of the rule, which begins with its use case or scope.
+   - type: the type of the rule, chosen from ["Error", "Success Process"].
+   - example: an example (or code) from the trajectory demonstrates this rule. You can add detailed information in the comment.
+   - task_id: the task id of the rule.
+
+You should use the following methods of rule_manager to delete and merge rules.
+
+rule_manager.update_rule(rule_id, rule="", type="", example=""),
+# Rewrite the attributes of an existing rule when you come up with a better understanding. 
+# Input only the attributes you want to rewrite.
+# Use full rule_id, such as rule_0, rule_1
+# Wrap the example string with '''.
+
+rule_manager.delete_rule(rule_id),
+# delete a existing rule with rule_id, such as rule_0, rule_1
+# **How to merge** To merge two existing rules, you can call rule_manager.update_rule for one rule and then call rule_manager.delete_rule to delete another rule.
+
+rule_manager.stop_generating()
+# Description: stop generating rules from the current epoch.
+# Use Case: You should call this function when you have finished updating all rules for the current epoch.
+
+[user]
+At each epoch, an agent is created in an environment, and the target task and observation are printed. The observations including:
+- The user's objective: This is the task you're trying to complete.
+- The web page's state: This is a simplified representation of the webpage, providing key information.
+
+The agent can only use the following actions:
+### Page Operation Actions:
+click [button_name] # clicks on an button on the webpage. Button's name is enclosed by [SEP]. And click [Buy Now] to complete the task.
+search [content] # search the content in the webpage.
+
+[user]
+[Detailed instructions]
+**Maintain a maximum of 10 rules**
+**Merge if addressed** If a "Success Process" rule can address the "Error" rule, you can consider merging these rules while retaining their details.
+
+**Retain important details** The rules of "Success Process" type should retain their details, and should not be deleted or easily refreshed by new updates. **Cannot merge two rules of type "Success Process"**
+**Insertion is preferable** If a rule is updated to include the content of other rules, you should try to preserve the details of the existing content and preferably insert a categorial discussion or just insert new content to it (or its example).
+
+When using update_rule, it's crucial to manually input the attributes directly into the function call. Avoid using existing variables to concatenate or modify rules.
+For example, should not update the rule like: rule_manager.update_rule("rule_0", rule=rule_manager.all_rules["rule_0"]+rule_manager.all_rules["rule_1"])
+And you should wrap the example string with ''' in update_rule function, such as rule_manager.update_rule("rule_0", rule="......", example='''<example>''')

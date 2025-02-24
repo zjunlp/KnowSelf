@@ -1,0 +1,36 @@
+include requirements.txt
+include requirements-*.txt
+include README.md
+include LICENSE.txt
+include CHANGELOG.md
+include CONTRIBUTING.md
+include License.md
+include setup.sh
+
+include glk_build.py
+recursive-include src *
+
+include textworld/logic/*.ebnf
+include textworld/textgen/*.ebnf
+include textworld/generator/data/logic/*.twl
+include textworld/generator/data/text_grammars/*.twg
+recursive-include textworld/challenges/ *.twl
+recursive-include textworld/challenges/ *.twg
+
+include textworld/envs/pddl/logic/*.ebnf
+include textworld/envs/pddl/textgen/*.ebnf
+
+recursive-include textworld/render/tmpl *
+
+recursive-include textworld/thirdparty/glulx *
+
+recursive-include textworld/thirdparty/inform7 *
+recursive-include textworld/thirdparty/inform7-6M62/bin *
+recursive-include textworld/thirdparty/inform7-6M62/share/inform7/Compilers *
+recursive-include textworld/thirdparty/inform7-6M62/share/inform7/Internal *
+recursive-include textworld/thirdparty/inform7-6M62/share/inform7/Interpreters *
+
+global-exclude *.o *.a
+global-exclude */__pycache__/*
+
+prune build

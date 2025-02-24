@@ -1,0 +1,27 @@
+@@grammar :: TextGrammar
+
+@@whitespace :: ?"[\t ]+"
+
+@@eol_comments :: ?"^(#.*|\s*)\n"
+
+start = grammar ;
+
+symbol = ?"[\w()/!<>-]+" ;
+
+literal = ?"((?:[^;|<>\n\[\]()]|\[[^\[\]]*\]|\([^()]*\))+(?<!\s))" ;
+
+literalAlternative::Literal = value:literal ;
+
+adjectiveNoun::AdjectiveNoun = adjective:literal "|" noun:literal ;
+
+entity = adjectiveNoun | literalAlternative ;
+
+match::Match = lhs:entity "<->" rhs:entity ;
+
+alternative = match | entity | ();
+
+alternatives = ";".{alternative}+ ;
+
+productionRule::ProductionRule = symbol:symbol ":" alternatives:alternatives ("\n" | $) ;
+
+grammar::TextGrammar = rules:{productionRule}* $ ;

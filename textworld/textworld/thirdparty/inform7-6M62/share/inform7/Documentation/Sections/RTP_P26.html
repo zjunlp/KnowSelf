@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html><head>
+<style type="text/css">
+    <!--
+	.headingbox {
+		position: relative;
+		height: 56px;
+		padding: 0px;
+		white-space:nowrap;
+		background: #f69Ca6;  /* red */
+		font-family: "Lucida Grande", "Lucida Sans Unicode", Helvetica, Arial, Verdana, sans-serif;
+		-webkit-font-smoothing: antialiased;
+	}
+	.headingtext {
+		position: absolute;
+		top: -4px;
+		left: -1px;
+		width: 100%;
+		color: #000000;
+		padding: 14px 10px 0px 10px;
+		font-size: 20px;
+		font-weight: bold;
+	}
+	.headingrubric {
+		position: absolute;
+		top: 36px;
+		width: 100%;
+		color: #000000;
+		padding: 0px 10px 0px 10px;
+		font-size: 11px;
+		font-weight: bold;
+	}
+    -->
+</style>
+<title>Run-time problem</title></head>
+<body><font face="lucida grande,geneva,arial,tahoma,verdana,helvetica,helv" size=2>
+<table cellspacing="3" border="0" width="100%">
+<tr id="surround0"><td style="width:100%">
+<div class="headingbox">
+	<div class="headingtext">Run-Time Problem</div>
+	<div class="headingrubric">Attempt to choose a random row in an entirely blank table (P26)</div>
+</div></td>
+</tr></table>
+
+<table border="0" cellspacing="4" cellpadding="0" width=100%><tr><td align="left" valign="top" width="110">
+<font face="lucida grande,geneva,arial,tahoma,verdana,helvetica,helv" size=2>
+<img src='inform:/outcome_images/RTE@2x.png' border=1 width=100 height=100>&nbsp;&nbsp;&nbsp;&nbsp;</font></td><td align="left" valign="top">
+<font face="lucida grande,geneva,arial,tahoma,verdana,helvetica,helv" size=2><p style="margin-top:0;">
+<p><i>Most problems are detected when Inform translates the source text, but this is one of the exceptions, a "run-time problem" which emerges only during play.</i></p>
+<hr>
+<p>Inform allows us to create tables with one or more blank rows to be filled in during the course of play. Blank rows effectively don't exist when it comes to reading information, so the choice of a random row always excludes them. As a result it will fail if every row in the table is blank, and that is what has happened here.<p>Typically this happens if you have, say, a table containing details of some randomised events which can happen in the course of play: when you want one to happen, you choose a random row and act on what's in it; to make sure the same event will never happen again, you blank that row out. If you have 10 different events, but call upon this process 11 times, then on the 11th time the table will be entirely blank and this problem will turn up. You can guard against this with a test such as <font color="#000080"><b>if the number of filled rows in the Table of Incidents is not 0, ...</b></font></p>
+</font></td></tr></table>
+</body>
+</html>

@@ -1,0 +1,59 @@
+[system]
+You are observing a web page agent as it acts within a Web environment. Your role is to construct a manual of rules to assist the agent in completing tasks in the simulated Webshop page. This requires recording and analyzing the experiences of the agent's successes and failures, and combining previous discoveries.
+
+[user]
+You will be presented with the current epoch's trajectory. The interaction in the trajectory includes the agent's thoughts, actions, and the resulting feedback.
+
+You should use the following methods of rule_manager to build, imporve and merge rules.
+
+rule_manager.write_rule(rule, type="", example="", task_id="")
+# Write down a new rule of the game you discovered.
+# Parameters:
+# - rule: a rule of the game you discovered.
+# - type: the type of the rule, chosen from ["Error", "Success Process"].
+# - example: an example (or code) from the trajectory demonstrates this rule. You can add detailed information in the comment.
+# - task_id: the id of the task that this rule is discovered from. If this rule is not discovered from any specific task, leave it empty. It should be string.
+
+rule_manager.update_rule(rule_id, rule="", type="", example=""),
+# Rewrite the attributes of a existing rule, when you come up with better understanding. 
+# Input only the attributes you want to rewrite.
+# Use full rule_id, such as rule_0, rule_1
+
+rule_manager.stop_generating()
+# Description: stop generating rules from the current epoch.
+# Use Case: When you believe that the trajectory of the current epoch is not needed or insufficient to derive any more new rules, you can call this function and wait for the next epoch's data. You should also call this function when you have updated all rules for the current epoch.
+
+[user]
+At each epoch, an agent is created in an environment, and the target task and observation are printed. The observations including:
+- The user's objective: This is the task you're trying to complete.
+- The web page's state: This is a simplified representation of the webpage, providing key information.
+
+The agent can only use the following actions:
+### Page Operation Actions:
+click [button_name] # clicks on an button on the webpage. Button's name is enclosed by [SEP]. And click [Buy Now] to complete the task.
+search [content] # search the content in the webpage.
+
+[user]
+Base on the current trajectory, you should output the following things:
+* State before Action: Analyze and summarize the state of the current trajectory. Don't mention action or feedback that are not part of the current trajectory.
+* Why correct action is correct: Analyze the reason why the correct action is correct.
+* Why explore action is not correct: Analyze the difference between the explore action and the correct action. And analyze the reason why the explore action is incorrect.
+* Potential Rules: Describe your thoughts about potential rules based on the current trajectory. Depending on the results, you may need to check *Success Process*, *Error*, and other findings in sequence. Each potential rule needs to be clarified whether it is related to existing rules.
+* Check Existing Rules: Describe whether existing rules are conflicted or need updating. 
+* Code: Finally, sequentially call the rule_manager's functions within '```python' and '```'.
+
+[user]
+Follow these instructions: 
+***Add or Update Rules*** 
+1. **Add Rules for Failure** summarize the error that led to failure. You should write a "Error" rule to record the error: in what situation, what the agent should do and should not to do . So that they can serve as reminders for the agent in the future. Please don't rush to propose any definitive reasons or suggestions for the error, just record it. And please strictly follow the reason why the correct action is correct.
+
+2. **Add Rules for Success** If the task is completed in the golden action (golden action is click [Buy Now]), it is essential to extract the useful strategy from the success, if it has not been included in the rules yet. Additionally, document all steps (marked as "[Step]") in the successful rule within a rule of the type "Success Process".
+
+**Keep new rules targeted and precise.** Break down a large phenomena or general strategy into targeted units as different rules. These can later be upgraded or merged into a more general or larger rule. Keep the rules as concise and easy to understand as possible, avoiding lengthy or complex descriptions.
+**Keep new rules general and universal.** The rule should not reference any specific item or location. You need to generalize across various items to help the agent learn to apply the rule.
+**Keep new rules in format.** The rule should be in the format "When the agent in [situation]/ When the task requires [situation], the agent should [action]".
+**Avoiding overconfidence for new rules** Please acknowledge the need for further verification in your note.
+
+**Update Rules** If an existing rule needs to be updated to include a new phenomenon, you should try to preserve the details of the existing content and preferably insert a categorial discussion or just insert new content to it (or its example). Especially, the rules of "Success Process" type should retain their details.
+
+Follow these instructions. Think step by step.

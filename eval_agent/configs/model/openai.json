@@ -1,0 +1,10 @@
+{
+    "agent_class": "OpenAILMAgent",
+    "config": {
+        "api_key": "your-api-key",
+        "api_base": "your-api-base",
+        "model_name": "gpt-3.5-turbo",
+        "max_tokens": 1024,
+        "temperature": 0.0
+    }
+}
