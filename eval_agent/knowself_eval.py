@@ -46,6 +46,17 @@ def cov_to_text(cov: List[int]) -> str:
     return "\n".join([c["content"] for c in cov])
 
 
+def conv_to_text_webshop(cov: List[int]) -> str:
+    msg = []
+    for c in cov[:-1]:
+        if c["role"] == "user":
+            msg.append(f"Observation: ...")
+        else:
+            msg.append(c["content"])
+    msg.append(cov[-1]["content"])
+    return "\n".join(msg)
+
+
 def format_input(task_desc, current_traj, rules):
     return (
         "The objectve:\n"
@@ -138,42 +149,90 @@ def call_model(
         logger.warning("[Knowledge] in preds")
         if task not in add_knowledge_task:
             add_knowledge_task.append(task.task_id)
-        if len(messages) == 3:
-            # add task knowledge to the prompt
-            prompt = ""
-            game_file = task.game_file
-            for k, v in alfworld_prompt.items():
-                if k in game_file:
-                    prompt = v
-                    break
-            if prompt == "":
-                logger.warning(f"Game file {game_file} not in alfworld_prompt")
-                return pred_text
-            knowledge_augmented_input = (
-                input + f"[Knowledge]<knowledge>{prompt}</knowledge>\n"
-            )
-            logger.warning(f"knowledge_augmented_input: {knowledge_augmented_input}")
-            inputs = tokenizer(knowledge_augmented_input, return_tensors="pt").to("cuda")
-            generated_ids = model.generate(
-                inputs.input_ids,
-                max_new_tokens=1024,
-                do_sample=False,
-                pad_token_id=tokenizer.pad_token_id,
-                stopping_criteria=stopping_criteria,
-            )
-            generated_ids = [
-                output_ids[len(input_ids) :]
-                for input_ids, output_ids in zip(inputs.input_ids, generated_ids)
-            ]
-            response = tokenizer.batch_decode(generated_ids, skip_special_tokens=False)[0]
-            pred_text = response.split(end_token)[0]
-            pred_text = f"[Knowledge]<knowledge>{prompt}</knowledge>\n" + pred_text
-        else:
-            # call select knowledge agent to select knowledge
+
+        if args.exp_config == "alfworld":
+            if len(messages) == 3:
+                # add task knowledge to the prompt
+                prompt = ""
+                game_file = task.game_file
+                for k, v in alfworld_prompt.items():
+                    if k in game_file:
+                        prompt = v
+                        break
+                if prompt == "":
+                    logger.warning(f"Game file {game_file} not in alfworld_prompt")
+                    return pred_text
+                knowledge_augmented_input = (
+                    input + f"[Knowledge]<knowledge>{prompt}</knowledge>\n"
+                )
+                logger.warning(f"knowledge_augmented_input: {knowledge_augmented_input}")
+                inputs = tokenizer(knowledge_augmented_input, return_tensors="pt").to("cuda")
+                generated_ids = model.generate(
+                    inputs.input_ids,
+                    max_new_tokens=1024,
+                    do_sample=False,
+                    pad_token_id=tokenizer.pad_token_id,
+                    stopping_criteria=stopping_criteria,
+                )
+                generated_ids = [
+                    output_ids[len(input_ids) :]
+                    for input_ids, output_ids in zip(inputs.input_ids, generated_ids)
+                ]
+                response = tokenizer.batch_decode(generated_ids, skip_special_tokens=False)[0]
+                pred_text = response.split(end_token)[0]
+                pred_text = f"[Knowledge]<knowledge>{prompt}</knowledge>\n" + pred_text
+            else:
+                # call select knowledge agent to select knowledge
+                with open(args.select_knowledge_inst) as f:
+                    prompt = f.read()
+                task_desc = messages[2]["content"]
+                current_traj = cov_to_text(messages[3:])
+                rule_data = json.load(open(args.knowledge_base_path))["all_rules"]
+                rules = []
+                for k, v in rule_data.items():
+                    rules.append(v["rule"])
+                rules = rules.__str__()
+                cur_task = format_input(task_desc, current_traj, rules)
+                _, knowledge_prompt = prompt_without_icl(prompt, cur_task)
+                logger.warning(knowledge_prompt)
+                select_knowledge_output = select_knowledge_agent(knowledge_prompt)
+                logger.warning(f"select_knowledge_output: {select_knowledge_output}")
+                if "[Chosen Rule]:" in select_knowledge_output:
+                    rule = select_knowledge_output.split("[Chosen Rule]:")[1].strip()
+                else:
+                    rule = ""
+                knowledge_augmented_input = (
+                    input + f"[Knowledge]<knowledge>{rule}</knowledge>\n"
+                )
+                logger.warning(f"[Knowledge]<knowledge>{rule}</knowledge>\n")
+                inputs = tokenizer(knowledge_augmented_input, return_tensors="pt").to("cuda")
+                generated_ids = model.generate(
+                    inputs.input_ids,
+                    max_new_tokens=1024,
+                    do_sample=False,
+                    pad_token_id=tokenizer.pad_token_id,
+                    stopping_criteria=stopping_criteria,
+                )
+                generated_ids = [
+                    output_ids[len(input_ids) :]
+                    for input_ids, output_ids in zip(inputs.input_ids, generated_ids)
+                ]
+                response = tokenizer.batch_decode(generated_ids, skip_special_tokens=False)[
+                    0
+                ]
+                pred_text = response.split(end_token)[0]
+                pred_text = f"[Knowledge]<knowledge>{rule}</knowledge>\n" + pred_text
+
+        elif args.exp_config == "webshop":
             with open(args.select_knowledge_inst) as f:
                 prompt = f.read()
-            task_desc = messages[2]["content"]
-            current_traj = cov_to_text(messages[3:])
+            task_desc = (
+                messages[2]["content"]
+                .split("Instruction: [SEP]")[1]
+                .split("[SEP] Search")[0]
+                .strip()
+            )
+            current_traj = conv_to_text_webshop(messages[3:])
             rule_data = json.load(open(args.knowledge_base_path))["all_rules"]
             rules = []
             for k, v in rule_data.items():
@@ -188,10 +247,11 @@ def call_model(
                 rule = select_knowledge_output.split("[Chosen Rule]:")[1].strip()
             else:
                 rule = ""
+                
             knowledge_augmented_input = (
                 input + f"[Knowledge]<knowledge>{rule}</knowledge>\n"
             )
-            logger.warning(f"[Knowledge]<knowledge>{rule}</knowledge>\n")
+            logger.warning(f"knowledge:\n[Knowledge]<knowledge>{rule}</knowledge>\n")
             inputs = tokenizer(knowledge_augmented_input, return_tensors="pt").to("cuda")
             generated_ids = model.generate(
                 inputs.input_ids,
