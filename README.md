@@ -1,17 +1,14 @@
 <h1 align="center"> KnowSelf </h1>
 <h3 align="center"> Agentic Knowledgeable Self-awareness </h3>
 
-<!-- <p align="center">
-  <a href="https://arxiv.org/abs/2410.07869">📄arXiv</a> •
-  <a href="https://huggingface.co/papers/2410.07869">🤗HFPaper</a> •
-  <a href="https://www.zjukg.org/project/WorFBench/">🌐Web</a> •
-  <a href="https://huggingface.co/collections/zjunlp/worfbench-66fc28b8ac1c8e2672192ea1">📊Dataset</a> •
-  <a href="https://notebooklm.google.com/notebook/a4c13fd7-29da-462c-a47e-69a26c0d326e/audio">🎧NotebookLM Audio</a>
-</p> -->
+<p align="center">
+  <a href="">📄arXiv</a> •
+  <a href="https://huggingface.co/collections/zjunlp/knowself-67b89580a9fa33106100115d">🤗HF</a>
+</p>
 
 [![Awesome](https://awesome.re/badge.svg)](https://github.com/zjunlp/KnowSelf) 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-<!-- ![](https://img.shields.io/github/last-commit/zjunlp/KnowSelf?color=green) -->
+![](https://img.shields.io/github/last-commit/zjunlp/KnowSelf?color=green)
 
 ## Table of Contents
 
@@ -23,8 +20,8 @@
 - [📝Training-Data-Construction](#training-data-construction)
 - [📉Training](#training)
 - [🧐Evaluation](#evaluation)
-<!-- - [🚩Citation](#citation) -->
-<!-- - 🎉[Contributors](#🎉contributors) -->
+- [🚩Citation](#citation)
+- 🎉[Contributors](#🎉contributors)
 
 ---
 
@@ -227,42 +224,20 @@ VLLM_WORKER_MULTIPROC_METHOD=spawn CUDA_VISIBLE_DEVICES=0,1,2,3 python -m eval_a
     --override
 ```
 
-<!-- ## 🚩Citation
+## 🚩Citation
 
-Please cite our repository if you use WKM in your work. Thanks!
+Please cite our repository if you use KnowSelf in your work. Thanks!
 
 ```bibtex
-@article{DBLP:journals/corr/abs-2405-14205,
-  author       = {Shuofei Qiao and
-                  Runnan Fang and
-                  Ningyu Zhang and
-                  Yuqi Zhu and
-                  Xiang Chen and
-                  Shumin Deng and
-                  Yong Jiang and
-                  Pengjun Xie and
-                  Fei Huang and
-                  Huajun Chen},
-  title        = {Agent Planning with World Knowledge Model},
-  journal      = {CoRR},
-  volume       = {abs/2405.14205},
-  year         = {2024},
-  url          = {https://doi.org/10.48550/arXiv.2405.14205},
-  doi          = {10.48550/ARXIV.2405.14205},
-  eprinttype    = {arXiv},
-  eprint       = {2405.14205},
-  timestamp    = {Wed, 19 Jun 2024 08:52:49 +0200},
-  biburl       = {https://dblp.org/rec/journals/corr/abs-2405-14205.bib},
-  bibsource    = {dblp computer science bibliography, https://dblp.org}
-}
-``` -->
+
+```
 
 
 
-<!-- ## 🎉Contributors
+## 🎉Contributors
 
 <a href="https://github.com/zjunlp/KnowSelf/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=zjunlp/KnowSelf" /></a>
 
-We will offer long-term maintenance to fix bug -->
+We will offer long-term maintenance to fix bug
 
