@@ -2,7 +2,7 @@
 <h3 align="center"> Agentic Knowledgeable Self-awareness </h3>
 
 <p align="center">
-  <a href="">📄arXiv</a> •
+  <a href="https://arxiv.org/abs/2504.03553">📄arXiv</a> •
   <a href="https://huggingface.co/collections/zjunlp/knowself-67b89580a9fa33106100115d">🤗HF</a>
 </p>
 
@@ -229,7 +229,15 @@ VLLM_WORKER_MULTIPROC_METHOD=spawn CUDA_VISIBLE_DEVICES=0,1,2,3 python -m eval_a
 Please cite our repository if you use KnowSelf in your work. Thanks!
 
 ```bibtex
-
+@misc{qiao2025agenticknowledgeableselfawareness,
+      title={Agentic Knowledgeable Self-awareness}, 
+      author={Shuofei Qiao and Zhisong Qiu and Baochang Ren and Xiaobin Wang and Xiangyuan Ru and Ningyu Zhang and Xiang Chen and Yong Jiang and Pengjun Xie and Fei Huang and Huajun Chen},
+      year={2025},
+      eprint={2504.03553},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2504.03553}, 
+}
 ```
 
 
