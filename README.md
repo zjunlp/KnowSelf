@@ -1,14 +1,18 @@
+<div align="center">
 <h1 align="center"> KnowSelf </h1>
 <h3 align="center"> Agentic Knowledgeable Self-awareness </h3>
 
 <p align="center">
   <a href="https://arxiv.org/abs/2504.03553">📄arXiv</a> •
-  <a href="https://huggingface.co/collections/zjunlp/knowself-67b89580a9fa33106100115d">🤗HF</a>
+  <a href="https://x.com/zxlzr/status/1909101837216891010">𝕏 Blog</a> •
+  <a href="https://huggingface.co/collections/zjunlp/knowself-67b89580a9fa33106100115d">🤗HuggingFace</a>
 </p>
 
 [![Awesome](https://awesome.re/badge.svg)](https://github.com/zjunlp/KnowSelf) 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 ![](https://img.shields.io/github/last-commit/zjunlp/KnowSelf?color=green)
+
+</div>
 
 ## Table of Contents
 
