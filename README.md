@@ -34,7 +34,7 @@
 Our code of the training module is referenced from [self-rag](https://github.com/AkariAsai/self-rag), while the code of the inference module is implemented based on [ETO](https://github.com/Yifan-Song793/ETO) and [IPR](https://github.com/WeiminXiong/IPR). And our code of the knowledge generation and consolidation module is referenced and adapted from [AutoManual](https://github.com/minghchen/automanual). The templator module of models is referenced from [OneGen](https://github.com/zjunlp/OneGen). Various baseline codes are sourced from [ReAct](https://github.com/ysymyth/ReAct), [Reflexion](https://github.com/noahshinn/reflexion), [ExpeL](https://github.com/LeapLabTHU/ExpeL), [ETO](https://github.com/Yifan-Song793/ETO), [KnowAgent](https://github.com/zjunlp/KnowAgent), [WKM](https://github.com/zjunlp/WKM). We use [LLaMA-Factory](https://github.com/hiyouga/LLaMA-Factory) to deploy our models. Thanks for their great contributions!
 
 
-![alt text](./assets/method.jpg)
+![alt text](./assets/framework.pdf)
 
 ## 🌟Overview
 
